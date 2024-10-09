@@ -3,9 +3,11 @@ from rdflib import Graph
 from speakeasypy import Speakeasy, Chatroom
 from typing import List
 import time
+import re
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
-nt_file_path = r'D:\dev\python\python-learn\ATAI\speakeasy-python-client-library\14_graph.nt'  # path to 14_graph.nt
+# nt_file_path = r'D:\dev\python\python-learn\ATAI\speakeasy-python-client-library\14_graph.nt'  # path to 14_graph.nt
+nt_file_path = '../atai_chatbot/data/14_graph.nt'
 listen_freq = 3
 
 
@@ -28,7 +30,19 @@ class Agent:
     #         return ["No results found."]
     #     else:
     #         return [list(row) for row in result_list]  # 返回每行结果的列表
+    def _is_sparql(self, query:str) -> bool:
+        return re.search(r'(\bSELECT\b|\bPREFIX\b)', query, re.IGNORECASE)
+    
+    def _parse_query(self, query:str):
+        instruction_part = ""
+        sparql_part = ""
+        sparql_match = re.search(r'(\bSELECT\b|\bPREFIX\b)', query, re.IGNORECASE)
 
+        instruction_part = query[:sparql_match.start()].strip()
+        sparql_part = query[sparql_match.start():].replace("'''", '').strip()
+
+        return instruction_part, sparql_part
+    
     def __query_sparql(self, query: str) -> list:
             """ 执行 SPARQL 查询并返回结果 """
             results = self.graph.query(query)
@@ -61,10 +75,26 @@ class Agent:
 
                     # Implement your agent here #
                     print(message.message)
-                    query_result = self.__query_sparql(f"""{message.message}""")
-                    # Send a message to the corresponding chat room using the post_messages method of the room object.
-                    # room.post_messages(f"Received your message: '{message.message}' ")
-                    room.post_messages(str(query_result))
+                    # query_result = self.__query_sparql(f"""{message.message}""")
+                    # # Send a message to the corresponding chat room using the post_messages method of the room object.
+                    # # room.post_messages(f"Received your message: '{message.message}' ")
+                    # room.post_messages(str(query_result))
+                    # # Mark the message as processed, so it will be filtered out when retrieving new messages.
+                    # room.mark_as_processed(message)
+                    # Implement your agent here #
+                    query = message.message
+                    # distinguish if the query is a sparql
+                    if self._is_sparql(query):
+                        # parse the query
+                        _, sparql_part = self._parse_query(query)
+                        # excute the query
+                        query_result = self.__query_sparql(sparql_part)
+                        print(f"log_info:{query_result}")
+                        # generate the response
+                        response_message = f"here is the searching result: '{query_result}'"
+                        # post the result to user
+                        room.post_messages(response_message)
+
                     # Mark the message as processed, so it will be filtered out when retrieving new messages.
                     room.mark_as_processed(message)
 
