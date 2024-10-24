@@ -8,8 +8,8 @@ import warnings
 import unicodedata
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
-# nt_file_path = r'D:\dev\python\python-learn\ATAI\speakeasy-python-client-library\14_graph.nt'  # path to 14_graph.nt
-nt_file_path = './atai_chatbot/data/14_graph.nt'
+nt_file_path = r'D:\dev\python\python-learn\ATAI\speakeasy-python-client-library\14_graph.nt'  # path to 14_graph.nt
+# nt_file_path = './atai_chatbot/data/14_graph.nt'
 listen_freq = 3
 
 

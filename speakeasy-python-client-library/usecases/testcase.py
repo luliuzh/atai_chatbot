@@ -8,6 +8,7 @@ queries = [
     'Who is the screenwriter of The Masked Gang: Cyprus? ',
     'What is the MPAA film rating of Weathering with You? ',
     'What is the genre of Good Neighbors? ',
+    'When was "The Godfather" released?'
 ]
 for query in queries:
     print(f'query:{query}')

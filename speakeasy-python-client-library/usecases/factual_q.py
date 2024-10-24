@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer
 from transformers import pipeline
 import spacy
+import json
 
 # step1: extract entity and relation
 class Query_Processer:
@@ -54,26 +55,51 @@ class Query_Processer:
                 merged_entities[entity['entity']] = entity['word']
         
         return merged_entities
-    
-    def relation_extractor(self, query)->dict:
-        '''extract the relation/predict and return a list(or dictionary)'''
-        # Use SpaCy to extract relationships from the query
-        relations = {}
-        doc = self.nlp(query)
-        # for ent in doc.ents
-        #     print(f'entity text:{ent.text}, label: {ent.label_}')
-        for token in doc:
-            # print(token.dep_, token.pos_)
-            if token.dep_ in ("ROOT", "acl", "advcl", "relcl") and token.pos_ == "VERB":
-                subject = [w for w in token.children if w.dep_ in ("nsubj", "nsubjpass")]
-                obj = [w for w in token.children if w.dep_ in ("dobj", "attr", "prep", "pobj")]
-                if subject and obj:
-                    relations["relation"]= token.lemma_
-            if token.dep_ in ("attr", "nsubj") and token.pos_ == "NOUN":
-                obj = [w for w in token.children if w.dep_ in ("prep", "pobj")]
-                if obj:
-                    relations["relation"]= token.lemma_
-        return relations
+
+    def relation_extractor(self, query) -> dict:
+        '''Extract the relation/predict and return a dictionary with relation_id as keys'''
+
+        # 从 JSON 文件加载数据
+        with open('data.json', 'r') as json_file:
+            loaded_relation_data = json.load(json_file)
+
+        # 创建一个字典来存储匹配结果
+        extracted_relations = {}
+
+        # 检查 query 是否是字符串，如果是，则处理为单个句子
+        if isinstance(query, str):
+            query = [query]  # 将单个句子变为列表以保持一致的处理逻辑
+
+        # 遍历句子列表，逐句进行解析和匹配
+        for sentence in query:
+            print(f"\nProcessing sentence: '{sentence}'")
+
+            # 遍历每个关系标签
+            for relation_id, relation_label in loaded_relation_data.items():
+                # 检查关系标签是否在句子中
+                if relation_label.lower() in sentence.lower():
+                    # 如果匹配到，则将 relation_id 作为键，relation_label 作为值存入字典
+                    extracted_relations[relation_id] = relation_label
+
+        # 返回匹配到的关系字典 (键为 relation_id，值为 relation_label)
+        return extracted_relations
+
+        # relations = {}
+        # doc = self.nlp(query)
+        # # for ent in doc.ents
+        # #     print(f'entity text:{ent.text}, label: {ent.label_}')
+        # for token in doc:
+        #     # print(token.dep_, token.pos_)
+        #     if token.dep_ in ("ROOT", "acl", "advcl", "relcl") and token.pos_ == "VERB":
+        #         subject = [w for w in token.children if w.dep_ in ("nsubj", "nsubjpass")]
+        #         obj = [w for w in token.children if w.dep_ in ("dobj", "attr", "prep", "pobj")]
+        #         if subject and obj:
+        #             relations["relation"]= token.lemma_
+        #     if token.dep_ in ("attr", "nsubj") and token.pos_ == "NOUN":
+        #         obj = [w for w in token.children if w.dep_ in ("prep", "pobj")]
+        #         if obj:
+        #             relations["relation"]= token.lemma_
+        # return relations
 
 
 
