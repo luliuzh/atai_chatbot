@@ -6,7 +6,7 @@ import json
 =======
 import rdflib
 import csv
->>>>>>> Stashed changes
+>>>>>>> Stashed changesgit
 
 # step1: extract entity and relation
 class Query_Processer:
