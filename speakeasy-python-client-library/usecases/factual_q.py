@@ -1,7 +1,12 @@
 from transformers import AutoTokenizer
 from transformers import pipeline
 import spacy
+<<<<<<< Updated upstream
 import json
+=======
+import rdflib
+import csv
+>>>>>>> Stashed changes
 
 # step1: extract entity and relation
 class Query_Processer:
@@ -107,14 +112,5 @@ class Query_Processer:
 # step2: mapping the entity and relation using dictionary
 # load the dictionaries:
 # load the dictionaries
-# with open('entity_ids.del', 'r') as ifile:
-#     ent2id = {rdflib.term.URIRef(ent): int(idx) for idx, ent in csv.reader(ifile, delimiter='\t')}
-#     id2ent = {v: k for k, v in ent2id.items()}
-# with open('relation_ids.del', 'r') as ifile:
-#     rel2id = {rdflib.term.URIRef(rel): int(idx) for idx, rel in csv.reader(ifile, delimiter='\t')}
-#     id2rel = {v: k for k, v in rel2id.items()}
-
-
-
 
 # step3: construct SPARQL query
