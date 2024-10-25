@@ -1,23 +1,73 @@
 from transformers import AutoTokenizer
 from transformers import pipeline
 import spacy
-<<<<<<< Updated upstream
 import json
-=======
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
+import json
 import rdflib
 import csv
->>>>>>> Stashed changesgit
+import re
 
 # step1: extract entity and relation
 class Query_Processer:
-    def __init__(self):
+    def __init__(self, graph):
         self.nlp = spacy.load("en_core_web_sm")
         self.tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-large-cased-finetuned-conll03-english")
         self.ner_pipeline = pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english", 
                         tokenizer=self.tokenizer,
                         aggregation_strategy = "simple")
+        
+        with open('data_entity.json', 'r') as f:
+            self.data_entities = json.load(f)
+        self.graph = graph
+        self.RDFS = rdflib.namespace.RDFS
 
-    def entity_extractor(self, query)->dict:
+    def query_knowledge_graph(self, entity: str, relation: str) -> str:
+        # Step 1: Prepare the entity and relation by resolving their URIs
+        # Assuming you have a way to map entity names and relation labels to URIs
+        self.ent2lbl = {ent: str(lbl) for ent, lbl in self.graph.subject_objects(self.RDFS.label)}
+        self.lbl2ent = {lbl: ent for ent, lbl in self.ent2lbl.items()}
+
+        entity_uri = self.lbl2ent.get(entity)  # Example: Resolve 'Good Neighbors' to URI
+        relation_uri = self.lbl2ent.get(relation)  # Example: Resolve 'genre' to URI
+
+        if not entity_uri or not relation_uri:
+            return "Entity or relation not found in the knowledge graph."
+        
+        # Step 2: Query the knowledge graph to retrieve objects related to the entity and relation
+        results = []
+        for obj in self.graph.objects(subject=entity_uri, predicate=relation_uri):
+            results.append(str(obj))  # Convert the object to a string
+
+        # Return the results in a readable format
+        if results:
+            return f"Results for '{entity}' with relation '{relation}': {', '.join(results)}"
+        else:
+            return f"No results found for '{entity}' with relation '{relation}'."
+
+    def _entity2id(self, entity: str)-> dict:
+
+        # 定义模糊匹配的阈值（例如 88 表示 88% 相似度）
+        threshold = 88
+
+        # 匹配结果存储
+        matching_results = {}
+
+        # 使用 fuzzywuzzy 提取与输入实体最相似的 entity_title
+        best_match = process.extractOne(entity, self.data_entities.values(), scorer=fuzz.ratio, score_cutoff=threshold)
+
+        if best_match:
+            matched_title, best_score = best_match[0], best_match[1]  # 提取匹配的 title 和分数
+            # 查找对应的 entity_uri
+            entity_uri = next((uri for uri, title in self.data_entities.items() if title == matched_title), None)
+            entity_id = entity_uri.split('/')[-1:][0]
+            if entity_uri:
+                matching_results[entity_id] = matched_title
+
+        return matching_results
+
+    def entity_extractor(self, query)->list:
         '''extract entity and return a list(or dictionary) of the entity'''
         # results = self.ner_pipeline(query)
         # entities = {result['word']: result['entity_group'] for result in results}        
@@ -58,15 +108,23 @@ class Query_Processer:
                 merged_entities[entity['entity']] += " " + entity['word']
             else:
                 merged_entities[entity['entity']] = entity['word']
-        
-        return merged_entities
+
+        # 匹配现有的entity
+        if merged_entities:
+            results = []
+
+            for entity_value in merged_entities.values():
+                matching_results = self._entity2id(str(entity_value))
+                if matching_results:
+                    results.append(matching_results)
+
+        return results
 
     def relation_extractor(self, query) -> dict:
         '''Extract the relation/predict and return a dictionary with relation_id as keys'''
 
-        # 从 JSON 文件加载数据
         with open('data.json', 'r') as json_file:
-            loaded_relation_data = json.load(json_file)
+            self.loaded_relation_data = json.load(json_file)
 
         # 创建一个字典来存储匹配结果
         extracted_relations = {}
@@ -80,7 +138,7 @@ class Query_Processer:
             print(f"\nProcessing sentence: '{sentence}'")
 
             # 遍历每个关系标签
-            for relation_id, relation_label in loaded_relation_data.items():
+            for relation_id, relation_label in self.loaded_relation_data.items():
                 # 检查关系标签是否在句子中
                 if relation_label.lower() in sentence.lower():
                     # 如果匹配到，则将 relation_id 作为键，relation_label 作为值存入字典
@@ -106,11 +164,3 @@ class Query_Processer:
         #             relations["relation"]= token.lemma_
         # return relations
 
-
-
-
-# step2: mapping the entity and relation using dictionary
-# load the dictionaries:
-# load the dictionaries
-
-# step3: construct SPARQL query
