@@ -4,7 +4,6 @@ from speakeasypy import Speakeasy, Chatroom
 from typing import List
 import time
 import re
-import warnings
 import unicodedata
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
@@ -22,16 +21,6 @@ class Agent:
         self.graph = Graph()
         self.graph.parse(nt_file_path, format='turtle')
 
-    # def __query_sparql(self, query: str) -> list:
-    #     """ 执行 SPARQL 查询并返回结果 """
-    #
-    #     results = self.graph.query(query)
-    #     print(results)
-    #     result_list = list(results)  # 将结果转换为列表
-    #     if not result_list:
-    #         return ["No results found."]
-    #     else:
-    #         return [list(row) for row in result_list]  # 返回每行结果的列表
     def _is_sparql(self, query:str) -> bool:
         return re.search(r'(\bSELECT\b|\bPREFIX\b)', query, re.IGNORECASE)
     
@@ -105,7 +94,7 @@ class Agent:
 
                             room.post_messages(response_message)
                             room.mark_as_processed(message)  
-                            # print(f'response for the query:{response_message}')
+                            print(f'response for the query:{response_message}')
                         
                 except Exception as e:
                     print(f"Error in processing room {room.room_id}: {e}")
