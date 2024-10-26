@@ -66,19 +66,25 @@ class Query_Processer:
         # 创建一个字典来存储匹配结果
         extracted_relations = {}
 
-        # 检查 query 是否是字符串，如果是，则处理为单个句子
+        # 确保 query 是列表格式（支持多句子输入）
         if isinstance(query, str):
-            query = [query]  # 将单个句子变为列表以保持一致的处理逻辑
+            query = [query]
 
         # 遍历句子列表，逐句进行解析和匹配
         for sentence in query:
             print(f"\nProcessing sentence: '{sentence}'")
 
+            # 提取实体（调用 entity_extractor 方法）
+            entities = self.entity_extractor(sentence)
+
+            # 将所有提取的实体拼接为一个字符串，方便检查是否包含关系标签
+            entity_text = " ".join(entities.values()).lower()
+
             # 遍历每个关系标签
             for relation_id, relation_label in loaded_relation_data.items():
-                # 检查关系标签是否在句子中
-                if relation_label.lower() in sentence.lower():
-                    # 如果匹配到，则将 relation_id 作为键，relation_label 作为值存入字典
+                # 检查关系标签是否在句子中，但不在提取的实体中
+                if relation_label.lower() in sentence.lower() and relation_label.lower() not in entity_text:
+                    # 如果符合条件，将 relation_id 作为键，relation_label 作为值存入字典
                     extracted_relations[relation_id] = relation_label
 
         # 返回匹配到的关系字典 (键为 relation_id，值为 relation_label)
