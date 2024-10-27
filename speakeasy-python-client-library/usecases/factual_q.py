@@ -25,7 +25,6 @@ class Query_Processer:
 
     def query_knowledge_graph(self, entity: str, relation: str) -> str:
         # Step 1: Prepare the entity and relation by resolving their URIs
-        # Assuming you have a way to map entity names and relation labels to URIs
         self.ent2lbl = {ent: str(lbl) for ent, lbl in self.graph.subject_objects(self.RDFS.label)}
         self.lbl2ent = {lbl: ent for ent, lbl in self.ent2lbl.items()}
 
