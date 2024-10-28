@@ -8,6 +8,7 @@ import json
 import rdflib
 import csv
 import re
+from graph_kg import graph
 
 # step1: extract entity and relation
 class Query_Processer:
@@ -18,8 +19,14 @@ class Query_Processer:
                         tokenizer=self.tokenizer,
                         aggregation_strategy = "simple")
         
-        with open('data_entity.json', 'r') as f:
+        self.WDT = rdflib.Namespace('http://www.wikidata.org/prop/direct/')
+      
+        with open('/Users/lilu/Desktop/courses_2024_fall/ATAI/atai_chatbot/speakeasy-python-client-library/usecases/data_entity.json', 'r') as f:
             self.data_entities = json.load(f)
+        
+        with open('/Users/lilu/Desktop/courses_2024_fall/ATAI/atai_chatbot/speakeasy-python-client-library/usecases/data.json', 'r') as json_file:
+            self.loaded_relation_data = json.load(json_file)
+
         self.graph = graph
         self.RDFS = rdflib.namespace.RDFS
 
@@ -27,9 +34,17 @@ class Query_Processer:
         # Step 1: Prepare the entity and relation by resolving their URIs
         self.ent2lbl = {ent: str(lbl) for ent, lbl in self.graph.subject_objects(self.RDFS.label)}
         self.lbl2ent = {lbl: ent for ent, lbl in self.ent2lbl.items()}
+        
+
+        relation_key = next((key for key, value in self.loaded_relation_data.items() if value == relation), None)
+
+        if relation_key is None:
+            return None  
+        
+        relation_uri = self.WDT[relation_key]
 
         entity_uri = self.lbl2ent.get(entity)  # Example: Resolve 'Good Neighbors' to URI
-        relation_uri = self.lbl2ent.get(relation)  # Example: Resolve 'genre' to URI
+        # relation_uri = self.lbl2ent.get(relation)  # Example: Resolve 'genre' to URI
 
         if not entity_uri or not relation_uri:
             return "Entity or relation not found in the knowledge graph."
@@ -121,9 +136,6 @@ class Query_Processer:
 
     def relation_extractor(self, query) -> dict:
         '''Extract the relation/predict and return a dictionary with relation_id as keys'''
-
-        with open('data.json', 'r') as json_file:
-            self.loaded_relation_data = json.load(json_file)
 
         # 创建一个字典来存储匹配结果
         extracted_relations = {}
