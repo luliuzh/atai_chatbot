@@ -7,8 +7,8 @@ import time
 import re
 import unicodedata
 from factual_q import Query_Processer
-
 from  Embedding_q import get_closest_entity
+from Intent_recognizer import IntentRecognizer
 
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
@@ -24,11 +24,6 @@ RDFS = rdflib.namespace.RDFS
 SCHEMA = rdflib.Namespace('http://schema.org/')
 
 
-
-
-
-
-
 class Agent:
     def __init__(self, username, password):
         self.username = username
@@ -36,38 +31,8 @@ class Agent:
         self.speakeasy.login()
         self.graph = Graph()
         self.graph.parse(nt_file_path, format='turtle')
-
-    def _is_sparql(self, query:str) -> bool:
-        return re.search(r'(\bSELECT\b|\bPREFIX\b)', query, re.IGNORECASE)
+        self.my_intent_recognizer = IntentRecognizer()
     
-    def _parse_query(self, query:str):
-        instruction_part = ""
-        sparql_part = ""
-        sparql_match = re.search(r'(\bSELECT\b|\bPREFIX\b)', query, re.IGNORECASE)
-
-        instruction_part = query[:sparql_match.start()].strip()
-        sparql_part = query[sparql_match.start():].replace("'''", '').strip()
-
-        return instruction_part, sparql_part
-    
-    def __query_sparql(self, query: str) -> list:
-        """ 执行 SPARQL 查询并返回结果 """
-        try:
-            results = self.graph.query(query)
-            # 提取字符串结果
-            extracted_results = [str(row[0]) for row in results]
-            if not extracted_results:  # Check if extracted_results is empty
-                return "NO_RESULTS"                 
-            # Join the extracted results into a single string
-            extracted_results = ", ".join(extracted_results)
-            # remove non-ASCII characters
-            extracted_results = unicodedata.normalize('NFKD', extracted_results)
-            extracted_results = re.sub(r'[^\x00-\x7F]+', '', extracted_results) 
-            return extracted_results.encode('utf-8').decode('utf-8') # Return as a formatted string    
-        except Exception as e:
-            return "ERROR"
-
-
     def listen(self):
         while True:
             # only check active chatrooms (i.e., remaining_time > 0) if active=True.
@@ -94,14 +59,16 @@ class Agent:
 
                         # Implement your agent here #
                         query = message.message
-                        # response_message = f"recieved your message:{query}"
-                        # distinguish if the query is a sparql
-                        if self._is_sparql(query):
+
+                        # distinguish intent
+                        intent = self.my_intent_recognizer.recognize_intent(query)
+
+                        if intent == "SPARSQL":
                             # parse the query
                             _, sparql_part = self._parse_query(query)
                             # excute the query
                             print(f'executing the query...')
-                            query_result = self.__query_sparql(sparql_part)
+                            query_result = self._query_sparql(sparql_part)
                             if query_result == "NO_RESULTS":
                                 response_message = "sorry no matching answer"
                             elif query_result == "ERROR":
@@ -112,7 +79,9 @@ class Agent:
                             room.post_messages(response_message)
                             room.mark_as_processed(message)  
                             print(f'response for the query:{response_message}')
-                        else:
+
+                        elif intent == "FACTUAL_OR_EMBEDDING":
+                            print(f'processing the factual or embedding query...')
                             my_query_processer = Query_Processer(self.graph)
                             entity = my_query_processer.entity_extractor(query)
                             relation = my_query_processer.relation_extractor(query, entity)
@@ -129,7 +98,16 @@ class Agent:
                             room.post_messages(response_message)
                             room.mark_as_processed(message)
                             print(f'response for the query:{response_message}')
-
+                        
+                        elif intent == 'RECOMMEND':
+                            print(f'processing recommend query...')
+                        
+                        elif intent == 'RANDOM':
+                            print(f'processing random query...')
+                            response_message = f"Hello, do you have any questions?"
+                            room.post_messages(response_message)
+                            room.mark_as_processed(message)
+                            print(f'response for the query:{response_message}')
 
 
                 except Exception as e:
@@ -154,6 +132,33 @@ class Agent:
     @staticmethod
     def get_time():
         return time.strftime("%H:%M:%S, %d-%m-%Y", time.localtime())
+    
+    def _parse_query(self, query:str):
+        instruction_part = ""
+        sparql_part = ""
+        sparql_match = re.search(r'(\bSELECT\b|\bPREFIX\b)', query, re.IGNORECASE)
+
+        instruction_part = query[:sparql_match.start()].strip()
+        sparql_part = query[sparql_match.start():].replace("'''", '').strip()
+
+        return instruction_part, sparql_part
+    
+    def _query_sparql(self, query: str) -> list:
+        """ 执行 SPARQL 查询并返回结果 """
+        try:
+            results = self.graph.query(query)
+            # 提取字符串结果
+            extracted_results = [str(row[0]) for row in results]
+            if not extracted_results:  # Check if extracted_results is empty
+                return "NO_RESULTS"                 
+            # Join the extracted results into a single string
+            extracted_results = ", ".join(extracted_results)
+            # remove non-ASCII characters
+            extracted_results = unicodedata.normalize('NFKD', extracted_results)
+            extracted_results = re.sub(r'[^\x00-\x7F]+', '', extracted_results) 
+            return extracted_results.encode('utf-8').decode('utf-8') # Return as a formatted string    
+        except Exception as e:
+            return "ERROR"
 
 if __name__ == '__main__':
     demo_bot = Agent("ancient-flame", "A3fcD1X4")
