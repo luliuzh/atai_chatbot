@@ -69,17 +69,40 @@ class Query_Processer:
             entity_id = entity_uri.split('/')[-1:][0]
             if entity_uri:
                 matching_results[entity_id] = matched_title
-
         return matching_results
+    
+    def entity_extractor_recommender(self, query)->list:
+        '''
+        input query
+        return matching result list[]
+        '''
+        entities = []
+        results = self.ner_pipeline(query)
+        # print('ner results:',results)
+        for i, result in enumerate(results):
+            word = result['word'].replace("##", "")
+            entities.append(word)
+        # print(f'entities: {entities}')
+            
+        # fuzzy match
+        if entities:
+            matching_results = []
 
+            for entity in entities:
+                matching = self._entity2id(str(entity))
+                print(f'matching results:{matching}')
+                if matching:
+                    matching_results.append(matching)
+        return matching_results
+    
     def entity_extractor(self, query)->list:
         '''extract entity and return a list(or dictionary) of the entity'''
         # results = self.ner_pipeline(query)
         # entities = {result['word']: result['entity_group'] for result in results}        
         # return entities
-        results = self.ner_pipeline(query)
-        # print(results)
         entities = []
+        results = self.ner_pipeline(query)
+        
         current_entity = ""
         current_label = None
         current_start = None
@@ -113,6 +136,8 @@ class Query_Processer:
                 merged_entities[entity['entity']] += " " + entity['word']
             else:
                 merged_entities[entity['entity']] = entity['word']
+        
+        print(f'merged entities:{merged_entities}')
 
         # 匹配现有的entity
         if merged_entities:
@@ -120,6 +145,7 @@ class Query_Processer:
 
             for entity_value in merged_entities.values():
                 matching_results = self._entity2id(str(entity_value))
+                print(f'matching results:{matching_results}')
                 if matching_results:
                     results.append(matching_results)
 
