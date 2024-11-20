@@ -28,7 +28,7 @@ class Recommender:
         pass
 
     # step 4: recommand movies using similarity 
-    def recommend(self)->list:
+    def recommend_movies(self)->list:
         '''
         input self.shared_attributes list[]
         return self.similar_movies list[]

@@ -9,6 +9,7 @@ import unicodedata
 from factual_q import Query_Processer
 from  Embedding_q import get_closest_entity
 from Intent_recognizer import IntentRecognizer
+from Recommender import Recommender
 
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
@@ -32,6 +33,8 @@ class Agent:
         self.graph = Graph()
         self.graph.parse(nt_file_path, format='turtle')
         self.my_intent_recognizer = IntentRecognizer()
+        self.my_query_processer = Query_Processer(self.graph)
+        self.my_recommender = Recommender()
     
     def listen(self):
         while True:
@@ -76,15 +79,10 @@ class Agent:
                             else:
                                 response_message = f"here is the searching result: {query_result}"
 
-                            room.post_messages(response_message)
-                            room.mark_as_processed(message)  
-                            print(f'response for the query:{response_message}')
-
                         elif intent == "FACTUAL_OR_EMBEDDING":
                             print(f'processing the factual or embedding query...')
-                            my_query_processer = Query_Processer(self.graph)
-                            entity = my_query_processer.entity_extractor(query)
-                            relation = my_query_processer.relation_extractor(query, entity)
+                            entity = self.my_query_processer.entity_extractor(query)
+                            relation = self.my_query_processer.relation_extractor(query, entity)
                             for entity_item, relation_item in zip(entity, relation.values()):
                                 entity_value = list(entity_item.values())[0]
                                 relation_value = relation_item
@@ -95,19 +93,22 @@ class Agent:
                                     response_message = "Sorry ,I dont find answer in my database"
                                 else:
                                     response_message = ( f"Closest entity for {entity_value} with relation {relation_value}: {response_message}")  # 输出结果
-                            room.post_messages(response_message)
-                            room.mark_as_processed(message)
-                            print(f'response for the query:{response_message}')
                         
                         elif intent == 'RECOMMEND':
                             print(f'processing recommend query...')
+                            entities = self.my_query_processer.entity_extractor_recommender(query)
+                            # shared_attributes = self.my_recommender.get_shared_attributes(entities)
+                            # recommend_movies = self.my_recommender.recommend_movies(entities)
+                            # response_message = f'Adequate recommendations will be {shared_attributes}, such as the movies {recommend_movies}'
+                            
                         
                         elif intent == 'RANDOM':
                             print(f'processing random query...')
                             response_message = f"Hello, do you have any questions?"
-                            room.post_messages(response_message)
-                            room.mark_as_processed(message)
-                            print(f'response for the query:{response_message}')
+                        
+                        room.post_messages(response_message)
+                        room.mark_as_processed(message)  
+                        print(f'response for the query:{response_message}')
 
 
                 except Exception as e:
@@ -123,7 +124,6 @@ class Agent:
                         f"- {self.get_time()}")
 
                     # Implement your agent here #
-
                     room.post_messages(f"Received your reaction: '{reaction.type}' ")
                     room.mark_as_processed(reaction)
 
