@@ -1,3 +1,4 @@
+
 import sys
 import rdflib
 from rdflib import Graph
@@ -13,8 +14,10 @@ from Recommender import Recommender
 
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
-# nt_file_path = r'D:\dev\python\python-learn\ATAI\speakeasy-python-client-library\14_graph.nt'  # path to 14_graph.nt
-nt_file_path = 'mychatbot/data/14_graph.nt'
+
+nt_file_path = r'data\14_graph.nt'
+
+
 listen_freq = 3
 
 # 定义命名空间
@@ -97,10 +100,21 @@ class Agent:
                         elif intent == 'RECOMMEND':
                             print(f'processing recommend query...')
                             entities = self.my_query_processer.entity_extractor_recommender(query)
+                            movies = [list(item.values())[0] for item in entities]
+                            recommend_movies = self.my_recommender.recommend_movies(movies)
+                            # 如果列表有多个元素，进行格式化处理
+                            if len(recommend_movies) > 1:
+                                movies_str = ', '.join(recommend_movies[:-1]) + f' and {recommend_movies[-1]}'
+                            else:
+                                # 如果只有一个电影
+                                movies_str = recommend_movies[0] if recommend_movies else "no movies"
+
+                            response_message = f'Adequate recommendations will be {shared_attributes}, such as the movies {movies_str}.'
+                            print(response_message)
                             # shared_attributes = self.my_recommender.get_shared_attributes(entities)
                             # recommend_movies = self.my_recommender.recommend_movies(entities)
                             # response_message = f'Adequate recommendations will be {shared_attributes}, such as the movies {recommend_movies}'
-                            
+
                         
                         elif intent == 'RANDOM':
                             print(f'processing random query...')

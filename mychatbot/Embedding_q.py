@@ -81,12 +81,3 @@ def get_closest_entity(graph,entity_label, relation_label):
     except Exception as e:
         print(f"An error occurred in get_closest_entity: {e}")
         return None
-
-# result = get_closest_entity(graph, entity_label='The Godfather', relation_label='')
-# # # 示例调用
-# #
-# print(f"Closest entity label: {result}")  # 打印返回的 label
-# result = get_closest_entity('Good Neighbors', 'genre')
-# print(f"Closest entity label: {result}")  # 打印返回的 label
-# result = get_closest_entity('The Masked Gang: Cyprus', 'screenwriter')
-# print(f"Closest entity label: {result}")  # 打印返回的 label

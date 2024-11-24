@@ -18,7 +18,7 @@ class Query_Processer:
                         tokenizer=self.tokenizer,
                         aggregation_strategy = "simple")
 
-        with open('mychatbot/data_entity.json', 'r', encoding='utf-8') as f:    ##change
+        with open('data_entity.json', 'r', encoding='utf-8') as f:    ##change
             self.data_entities = json.load(f)
         self.graph = graph
         self.RDFS = rdflib.namespace.RDFS
