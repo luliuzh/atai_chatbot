@@ -153,15 +153,15 @@ class Recommender:
             query = query.strip()
 
             res = []
-            for row in self.graph.query(query):
+            for row in self.gra.query(query):
                 res.append([str(i) for i in row]) 
 
-            print(f"res: {res}")
+            # print(f"res: {res}")
             emb_list = [self.entity_emb[self.ent2id[rdflib.term.URIRef(ent[0])]] 
                             for ent in res if rdflib.term.URIRef(ent[0]) in self.ent2id.keys()]
             features_emb += emb_list
         
-        print(f"features_emb: {features_emb}")
+        # print(f"features_emb: {features_emb}")
         cluster = KMeans(n_clusters=np.max(( int(len(features_emb)/2), 1) ),
                          n_init='auto')
         cluster.fit(np.array(features_emb))
