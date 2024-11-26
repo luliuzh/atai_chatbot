@@ -54,10 +54,11 @@ class Recommender:
         # Average distances
         combined_dist = sum(distances) / len(distances)
 
-        # Sort and exclude input entities
+        # Sort and exclude input labels
+        input_labels = {self.ent2lbl[self.id2ent[ent_id]] for ent_id in input_indices}
         most_likely = [
             idx for idx in combined_dist.argsort()
-            if self.id2ent[idx] not in {self.id2ent[ent_id] for ent_id in input_indices}  # Exclude input entities
+            if self.ent2lbl.get(self.id2ent[idx], "Unknown") not in input_labels  # Exclude input labels
         ]
 
         # Get top three recommended movie labels
@@ -66,6 +67,10 @@ class Recommender:
             for idx in most_likely[:3]
         ]
         return similar_movies
+    
+
+
+
 
 
 
@@ -74,7 +79,8 @@ class Recommender:
 recommender = Recommender()
 
 # Input label set
-labels = {"The Lion King", "Beauty and the Beast", "Pocahontas"}
+# labels = {"The Lion King", "Beauty and the Beast", "Pocahontas"}
+labels = {"Nightmare on Elm Street", "Friday the 13th", "Halloween"}
 
 # Get recommended movies
 try:

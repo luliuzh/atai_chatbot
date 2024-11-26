@@ -109,7 +109,7 @@ class Agent:
                                 # 如果只有一个电影
                                 movies_str = recommend_movies[0] if recommend_movies else "no movies"
 
-                            response_message = f'Adequate recommendations will be {shared_attributes}, such as the movies {movies_str}.'
+                            response_message = f'Adequate recommendations will be , such as the movies {movies_str}.'
                             print(response_message)
                             # shared_attributes = self.my_recommender.get_shared_attributes(entities)
                             # recommend_movies = self.my_recommender.recommend_movies(entities)
