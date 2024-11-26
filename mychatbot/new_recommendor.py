@@ -153,7 +153,7 @@ class Recommender:
             query = query.strip()
 
             res = []
-            for row in self.gra.query(query):
+            for row in self.graph.query(query):
                 res.append([str(i) for i in row]) 
 
             # print(f"res: {res}")
@@ -184,24 +184,28 @@ class Recommender:
 
 
 
-# Initialize the Recommender class
-recommender = Recommender()
+def main():
+    # Initialize the Recommender class
+    recommender = Recommender()
 
-# Input label set
-labels = {"The Lion King", "Beauty and the Beast", "Pocahontas"}
+    # Input label set
+    labels = {"The Lion King", "Beauty and the Beast", "Pocahontas"}
 
-# Get recommended movies
-try:
-    similar_movies = recommender.recommend_movies(labels)
-    print("Recommended Movies:")
-    print(similar_movies)
-except ValueError as e:
-    print(f"Error: {e}")
+    # Get recommended movies
+    try:
+        similar_movies = recommender.recommend_movies(labels)
+        print("Recommended Movies:")
+        print(similar_movies)
+    except ValueError as e:
+        print(f"Error: {e}")
 
-# Get common features
-try:
-    common_features = recommender._common_feature(labels, K=3)
-    print("Common Features:")
-    print(common_features)
-except ValueError as e:
-    print(f"Error: {e}")
+    # Get common features
+    try:
+        common_features = recommender._common_feature(labels, K=3)
+        print("Common Features:")
+        print(common_features)
+    except ValueError as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    main()

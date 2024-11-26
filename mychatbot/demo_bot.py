@@ -10,7 +10,7 @@ import unicodedata
 from factual_q import Query_Processer
 from  Embedding_q import get_closest_entity
 from Intent_recognizer import IntentRecognizer
-from Recommender import Recommender
+from new_recommendor import Recommender
 
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
@@ -102,14 +102,19 @@ class Agent:
                             entities = self.my_query_processer.entity_extractor_recommender(query)
                             movies = [list(item.values())[0] for item in entities]
                             recommend_movies = self.my_recommender.recommend_movies(movies)
+                            common_features = self.my_recommender._common_feature(movies)
                             # 如果列表有多个元素，进行格式化处理
+                            if len(common_features) > 1:
+                                feature_str = ', '.join(common_features[:-1]) + f' and {common_features[-1]}'
+                            else:
+                                feature_str = common_features[0] if common_features else "no feature"
                             if len(recommend_movies) > 1:
                                 movies_str = ', '.join(recommend_movies[:-1]) + f' and {recommend_movies[-1]}'
                             else:
                                 # 如果只有一个电影
                                 movies_str = recommend_movies[0] if recommend_movies else "no movies"
 
-                            response_message = f'Adequate recommendations will be , such as the movies {movies_str}.'
+                            response_message = f'The movies you shared have some common features, such as {feature_str}. Based on that, I’d recommend similar movies like  {movies_str}.'
                             print(response_message)
                             # shared_attributes = self.my_recommender.get_shared_attributes(entities)
                             # recommend_movies = self.my_recommender.recommend_movies(entities)
