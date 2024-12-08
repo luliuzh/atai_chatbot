@@ -3,16 +3,14 @@ import numpy as np
 import pandas as pd
 import pickle
 from sklearn.metrics import pairwise_distances
-import string
 import rdflib
 from graph import *
 import json
 import re
-import unicodedata
 import rdflib
 from rdflib import Graph
 
-class Recommender:
+class Recommender():
     """
     A class to recommend movies and shared features based on similarity scores.
     """

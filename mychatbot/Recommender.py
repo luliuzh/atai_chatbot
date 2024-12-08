@@ -41,7 +41,7 @@ class Recommender:
         """
         # Convert labels to indices
         input_indices = self.labels_to_indices(labels)
-
+        if input_indices == -1 : return  -1
         if not input_indices:
             raise ValueError("Input labels could not be mapped to any valid entities.")
 
@@ -81,6 +81,7 @@ recommender = Recommender()
 # Input label set
 # labels = {"The Lion King", "Beauty and the Beast", "Pocahontas"}
 labels = {"Nightmare on Elm Street", "Friday the 13th", "Halloween"}
+labels = {"tsesfraf"}
 
 # Get recommended movies
 try:

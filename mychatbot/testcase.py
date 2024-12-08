@@ -15,6 +15,7 @@ queries = [
     # 'What is the MPAA film rating of Weathering with You? ',
     # 'What is the genre of Good Neighbors? ',
     # 'When was "The Godfather" released?',
+    
 
     'Given that I like The Lion King, Pocahontas, and The Beauty and the Beast, can you recommend some movies?',
     'Recommend movies like Nightmare on Elm Street, Friday the 13th, and Halloween.'

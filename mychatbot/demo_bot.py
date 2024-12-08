@@ -1,5 +1,6 @@
 
 import sys
+from pydantic import Extra
 import rdflib
 from rdflib import Graph
 from speakeasypy import Speakeasy, Chatroom
@@ -11,6 +12,8 @@ from factual_q import Query_Processer
 from  Embedding_q import get_closest_entity
 from Intent_recognizer import IntentRecognizer
 from new_recommendor import Recommender
+from MultiMedia import multimedia_handler
+import pickle
 
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
@@ -19,7 +22,7 @@ nt_file_path = r'data\14_graph.nt'
 
 
 listen_freq = 3
-
+pickle_file = "data/14_graph.pickle"
 # 定义命名空间
 WD = rdflib.Namespace('http://www.wikidata.org/entity/')
 WDT = rdflib.Namespace('http://www.wikidata.org/prop/direct/')
@@ -27,14 +30,20 @@ DDIS = rdflib.Namespace('http://ddis.ch/atai/')
 RDFS = rdflib.namespace.RDFS
 SCHEMA = rdflib.Namespace('http://schema.org/')
 
+with open("data/14_graph.pickle", "rb") as f:
+            graph = pickle.load(f)
+
 
 class Agent:
     def __init__(self, username, password):
         self.username = username
         self.speakeasy = Speakeasy(host=DEFAULT_HOST_URL, username=username, password=password)
         self.speakeasy.login()
-        self.graph = Graph()
-        self.graph.parse(nt_file_path, format='turtle')
+        # self.graph = Graph()
+        # self.graph.parse(nt_file_path, format='turtle')
+        # 直接加载 pickle 文件
+        self.graph = graph
+
         self.my_intent_recognizer = IntentRecognizer()
         self.my_query_processer = Query_Processer(self.graph)
         self.my_recommender = Recommender()
@@ -101,6 +110,7 @@ class Agent:
                             print(f'processing recommend query...')
                             entities = self.my_query_processer.entity_extractor_recommender(query)
                             movies = [list(item.values())[0] for item in entities]
+                            # if movies = none , give a template answer
                             recommend_movies = self.my_recommender.recommend_movies(movies)
                             common_features = self.my_recommender._common_feature(movies)
                             # 如果列表有多个元素，进行格式化处理
@@ -114,12 +124,23 @@ class Agent:
                                 # 如果只有一个电影
                                 movies_str = recommend_movies[0] if recommend_movies else "no movies"
 
-                            response_message = f'The movies you shared have some common features, such as {feature_str}. Based on that, I’d recommend similar movies like  {movies_str}.'
+                            response_message = f"The movies you mentioned share common features like {feature_str}. Based on these, I recommend similar movies such as {movies_str}."
+
                             print(response_message)
                             # shared_attributes = self.my_recommender.get_shared_attributes(entities)
                             # recommend_movies = self.my_recommender.recommend_movies(entities)
                             # response_message = f'Adequate recommendations will be {shared_attributes}, such as the movies {recommend_movies}'
 
+
+                        elif intent == 'Multimedia':
+                            # response_message ="image:2889/rm1919332864"
+                            print(f'processing Multimedia...')
+                            Extracted_entities = self.my_query_processer.entity_extractor_recommender(query)
+                            entities = [list(item.values())[0] for item in Extracted_entities]
+                            print(entities)
+                            multimedia = multimedia_handler(self.graph)
+                            response_message = multimedia.show_img(entities)
+                         
                         
                         elif intent == 'RANDOM':
                             print(f'processing random query...')
